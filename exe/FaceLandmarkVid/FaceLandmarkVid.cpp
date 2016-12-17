@@ -176,6 +176,21 @@ void visualise_tracking(cv::Mat& captured_image, cv::Mat_<float>& depth_image, c
 	}
 }
 
+// Move the mouse cursor
+void MouseMove(int x, int y)
+{
+	double fScreenWidth = ::GetSystemMetrics(SM_CXSCREEN) - 1;
+	double fScreenHeight = ::GetSystemMetrics(SM_CYSCREEN) - 1;
+	double fx = x*(65535.0f / fScreenWidth);
+	double fy = y*(65535.0f / fScreenHeight);
+	INPUT  Input = { 0 };
+	Input.type = INPUT_MOUSE;
+	Input.mi.dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE;
+	Input.mi.dx = fx;
+	Input.mi.dy = fy;
+	::SendInput(1, &Input, sizeof(INPUT));
+}
+
 int main (int argc, char **argv)
 {
 
@@ -221,6 +236,18 @@ int main (int argc, char **argv)
 	int f_n = -1;
 	
 	det_parameters.track_gaze = true;
+
+
+	// Gaze tracking, previous and change in absolute gaze direction
+	cv::Point3f pregazeDirection0(0, 0, -1);
+	cv::Point3f pregazeDirection1(0, 0, -1);
+	cv::Point3f deltagazeDirection0(0, 0, -1);
+	cv::Point3f deltagazeDirection1(0, 0, -1);
+	int MouseX = 1000;
+	int MouseY = 500;
+	int smoothMouseX = 1000;
+	int smoothMouseY = 500;
+
 
 	while(!done) // this is not a for loop as we might also be reading from a webcam
 	{
@@ -365,6 +392,48 @@ int main (int argc, char **argv)
 			{
 				FaceAnalysis::EstimateGaze(clnf_model, gazeDirection0, fx, fy, cx, cy, true);
 				FaceAnalysis::EstimateGaze(clnf_model, gazeDirection1, fx, fy, cx, cy, false);
+
+
+				//deltagazeDirection0 = gazeDirection0 - pregazeDirection0;
+				//deltagazeDirection1 = gazeDirection1 - pregazeDirection1;
+
+				//float deltaX = gazeDirection0.x - pregazeDirection0.x;
+				//float deltaY = gazeDirection0.y - pregazeDirection0.y;
+				float deltaX = (gazeDirection0.x - pregazeDirection0.x + gazeDirection1.x - pregazeDirection1.x) / 2;
+				float deltaY = (gazeDirection0.y - pregazeDirection0.y + gazeDirection1.y - pregazeDirection1.y) / 2;
+				//float deltaZ = (gazeDirection0.z - pregazeDirection0.z + gazeDirection1.z - pregazeDirection1.z) / 2;
+				
+				int mouse_mult = 100000;
+				float mouse_min = 0.005;
+
+				//deltaX = deltaX;
+				//deltaY = 0;
+
+				//if (deltagazeDirection0.x > mouse_min) {
+				if (abs(deltaX) > mouse_min) {
+					MouseX -= deltaX * mouse_mult;
+					if (MouseX < 0) { MouseX = 0; }
+					else if (MouseX > 2000) { MouseX = 2000; }
+				}
+				if (abs(deltaY) > mouse_min) {
+					MouseY -= deltaY * mouse_mult;
+					if (MouseY < 0) { MouseY = 0; }
+					else if (MouseY > 1000) { MouseY = 1000; }
+				}
+				/*
+				MouseY += deltagazeDirection0.y * mouse_mult;
+				if (MouseY < 0) { MouseY = 0; }
+				else if (MouseY > 1000) { MouseY = 1000; }
+				*/
+				//MouseMove(MouseX, MouseY);
+				//MouseMove(100,100);
+				int smoothing = 40;
+				smoothMouseX = (smoothMouseX * smoothing + MouseX) / (smoothing + 1);
+				smoothMouseY = (smoothMouseY * smoothing + MouseY) / (smoothing + 1);
+				MouseMove(smoothMouseX, smoothMouseY);
+
+				pregazeDirection0 = gazeDirection0;
+				pregazeDirection1 = gazeDirection1;
 			}
 
 			visualise_tracking(captured_image, depth_image, clnf_model, det_parameters, gazeDirection0, gazeDirection1, frame_count, fx, fy, cx, cy);
@@ -385,6 +454,14 @@ int main (int argc, char **argv)
 			if(character_press == 'r')
 			{
 				clnf_model.Reset();
+			}
+			// restart the mouse
+			if (character_press == 'm')
+			{
+				MouseX = 1000;
+				MouseY = 500;
+				smoothMouseX = 1000;
+				smoothMouseY = 500;
 			}
 			// quit the application
 			else if(character_press=='q')
