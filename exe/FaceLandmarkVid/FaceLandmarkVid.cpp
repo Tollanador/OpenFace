@@ -239,12 +239,14 @@ int main (int argc, char **argv)
 
 
 	// Gaze tracking, previous and change in absolute gaze direction
+	/*
 	cv::Point3f pregazeDirection0(0, 0, -1);
 	cv::Point3f pregazeDirection1(0, 0, -1);
 	cv::Point3f deltagazeDirection0(0, 0, -1);
 	cv::Point3f deltagazeDirection1(0, 0, -1);
 	int MouseX = 1000;
 	int MouseY = 500;
+	*/
 	int smoothMouseX = 1000;
 	int smoothMouseY = 500;
 	bool MouseControl = true;
@@ -253,6 +255,8 @@ int main (int argc, char **argv)
 	cv::Point3f mingazeDirection1(0, 0, -1);
 	cv::Point3f maxgazeDirection0(0, 0, -1);
 	cv::Point3f maxgazeDirection1(0, 0, -1);
+	int ScreenWidth = ::GetSystemMetrics(SM_CXSCREEN);
+	int ScreenHeight = ::GetSystemMetrics(SM_CYSCREEN);
 
 
 	while(!done) // this is not a for loop as we might also be reading from a webcam
@@ -293,6 +297,11 @@ int main (int argc, char **argv)
 		{
 			INFO_STREAM( "Attempting to capture from device: " << device );
 			video_capture = cv::VideoCapture( device );
+
+			// Set the resolution
+			//video_capture.set(CV_CAP_PROP_FRAME_WIDTH, 1920);
+			//video_capture.set(CV_CAP_PROP_FRAME_HEIGHT, 1080);
+			//video_capture.set(CV_CAP_PROP_AUTOFOCUS, 1); //# turn the autofocus off
 
 			// Read a first frame often empty in camera
 			cv::Mat captured_image;
@@ -455,10 +464,10 @@ int main (int argc, char **argv)
 						float my0 = (gazeDirection0.y - mingazeDirection0.y) / (maxgazeDirection0.y - mingazeDirection0.y);
 						float mx1 = (maxgazeDirection1.x - gazeDirection1.x) / (maxgazeDirection1.x - mingazeDirection1.x);
 						float my1 = (gazeDirection1.y - mingazeDirection1.y) / (maxgazeDirection1.y - mingazeDirection1.y);
-						int mx = (mx0 + mx1) * 1000;
-						int my = (my0 + my1) * 500;
+						int mx = (mx0 + mx1) * ScreenWidth / 4;
+						int my = (my0 + my1) * ScreenHeight / 4;
 						//MousePosition(mx, my);
-						int smoothing = 20;
+						int smoothing = 10;
 						smoothMouseX = (smoothMouseX * smoothing + mx) / (smoothing + 1);
 						smoothMouseY = (smoothMouseY * smoothing + my) / (smoothing + 1);
 						MousePosition(smoothMouseX, smoothMouseY);
@@ -502,6 +511,37 @@ int main (int argc, char **argv)
 			{
 				clnf_model.Reset();
 			}
+			// print the current gaze directions
+			if (character_press == 'g')
+			{
+				INFO_STREAM("gaze0: ( " << gazeDirection0.x
+					<< ", " << gazeDirection0.y
+					<< ", " << gazeDirection0.z
+					<< " )");
+				INFO_STREAM("gaze1: ( " << gazeDirection1.x
+					<< ", " << gazeDirection1.y
+					<< ", " << gazeDirection1.z
+					<< " )");
+			}
+			// print the current gaze x directions
+			if (character_press == 'x')
+			{
+				INFO_STREAM("gaze0x: " << gazeDirection0.x << ", gaze1x: " << gazeDirection1.x);
+			}
+			// print the current gaze y directions
+			if (character_press == 'c')
+			{
+				INFO_STREAM("gaze0y: " << gazeDirection0.y << ", gaze1y: " << gazeDirection1.y);
+			}
+			// print the current gaze z directions
+			if (character_press == 'v')
+			{
+				INFO_STREAM("gaze0z: " << gazeDirection0.z << ", gaze1z: " << gazeDirection1.z);
+			}
+			if (character_press == 's')
+			{
+				INFO_STREAM("Screen Size: " << ::GetSystemMetrics(SM_CXSCREEN) << ", " << ::GetSystemMetrics(SM_CYSCREEN));
+			}
 			// restart the mouse
 			if (character_press == 'm')
 			{
@@ -520,9 +560,9 @@ int main (int argc, char **argv)
 					maxgazeDirection0 = gazeDirection0;
 					mingazeDirection1 = gazeDirection1;
 					maxgazeDirection1 = gazeDirection1;
-					MousePosition(1000, 500);
-					smoothMouseX = 1000;
-					smoothMouseY = 500;
+					MousePosition(ScreenWidth / 2, ScreenHeight / 2);
+					smoothMouseX = ScreenWidth / 2;
+					smoothMouseY = ScreenHeight / 2;
 				}
 				else 
 				{ 
