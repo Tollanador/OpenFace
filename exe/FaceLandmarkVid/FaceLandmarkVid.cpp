@@ -427,9 +427,10 @@ int main (int argc, char **argv)
 				gazeDirection.x = (gazeDirection0.x + gazeDirection1.x) / 2.f;
 				gazeDirection.y = (gazeDirection0.y + gazeDirection1.y) / 2.f;
 				gazeDirection.z = (gazeDirection0.z + gazeDirection1.z) / 2.f;
+				*/
 				gazeDiff = sqrtf(
 					(gazeDirection0.y - gazeDirection1.y) * (gazeDirection0.y - gazeDirection1.y) +
-					(gazeDirection0.x + gazeDirection1.x) * (gazeDirection0.x + gazeDirection1.x));
+					(gazeDirection0.x - gazeDirection1.x) * (gazeDirection0.x - gazeDirection1.x));
 
 				/*
 				//deltagazeDirection0 = gazeDirection0 - pregazeDirection0;
@@ -521,29 +522,53 @@ int main (int argc, char **argv)
 
 					gazeDirection.x = (gazeDirection0.x + gazeDirection1.x - midgazeDirection0.x - midgazeDirection1.x) / 2.f;
 					gazeDirection.y = (gazeDirection0.y + gazeDirection1.y - midgazeDirection0.y - midgazeDirection1.y) / 2.f;
+					/*
 					gazeDiff = sqrtf(
 						(gazeDirection0.y - gazeDirection1.y - midgazeDirection0.y - midgazeDirection1.y)
 						* (gazeDirection0.y - gazeDirection1.y - midgazeDirection0.y - midgazeDirection1.y) +
 						(gazeDirection0.x + gazeDirection1.x - midgazeDirection0.x - midgazeDirection1.x)
 						* (gazeDirection0.x + gazeDirection1.x - midgazeDirection0.x - midgazeDirection1.x));
-
-					float gazeDiffToll = (maxgazeDiff - mingazeDiff) * 0;
-
+					*/
+					float gazeDiffToll = (maxgazeDiff - mingazeDiff) * 0.01;
+					/*
+					if (gazeDiff > maxgazeDiff + gazeDiffToll)
+					{
+						event_happening = true;
+						if (loop_count == 10)
+							Beep(750, 100);
+						else
+							Sleep(10);
+					}
+					else if (gazeDiff < mingazeDiff - gazeDiffToll)
+					{
+						event_happening = true;
+						if (loop_count == 10)
+							Beep(850, 100);
+						else
+							Sleep(10);
+					}
+					else */
 					if (gazeDirection.x > mingazeDirection.x && gazeDirection.x < maxgazeDirection.x &&
 						gazeDirection.y > mingazeDirection.y && gazeDirection.y < maxgazeDirection.y)
 					{
+						//*
 						if (gazeDiff > maxgazeDiff + gazeDiffToll)
 						{
 							event_happening = true;
-							if (loop_count ==  0)
-								Beep(750, 200);
+							if (loop_count ==  10)
+								Beep(750, 100);
+							else
+								Sleep(10);
 						}
 						else if (gazeDiff < mingazeDiff - gazeDiffToll)
 						{
 							event_happening = true;
-							if (loop_count == 0)
-								Beep(850, 200);
+							if (loop_count == 10)
+								Beep(850, 100);
+							else
+								Sleep(10);
 						}
+						//*/
 					}
 					else
 					{
@@ -564,35 +589,132 @@ int main (int argc, char **argv)
 						else if (gazeDirection0.y > maxgazeDirection0.y) { smoothMouseY += (gazeDirection0.y - maxgazeDirection0.y) * smoothing; } // smoothing; }
 						*/
 
+						int loop_start = 10;
+						int loop_stop = 30;
+						int before_sleep = 30;
+						int during_sleep = 30;
+						int after_sleep = 80;
+
 						if (gazeDirection.x < mingazeDirection.x) 
-						{ 
-							smoothMouseX += (mingazeDirection.x - gazeDirection.x) * smoothing; 
+						{
+							event_happening = true;
+							if (loop_count > loop_start && loop_count < loop_stop)
+							{
+								smoothMouseX += (mingazeDirection.x - gazeDirection.x) * smoothing;
+								Sleep(during_sleep);
+							}
+							else if (loop_count == loop_stop)
+							{
+								Beep(650, 100);
+							}
+							else if (loop_count == 2 * loop_stop)
+							{
+								Beep(950, 100);
+							}
+							else if (loop_count > loop_stop)
+							{
+								Sleep(after_sleep);
+							}
+							else
+								Sleep(before_sleep);
+							/*
 							if (gazeDiff < mingazeDiff - gazeDiffToll)
 							{
 								event_happening = true;
-								if (loop_count == 0)
+								if (loop_count == 10)
 								{
 									Beep(850, 100);
 									Beep(950, 100);
 								}
+								else
+									Sleep(10);
 							}
+							*/
 						} // smoothing; }
 						else if (gazeDirection.x > maxgazeDirection.x) 
-						{ 
-							smoothMouseX -= (gazeDirection.x - maxgazeDirection.x) * smoothing;
+						{
+							event_happening = true;
+							if (loop_count > loop_start && loop_count < loop_stop)
+							{
+								smoothMouseX -= (gazeDirection.x - maxgazeDirection.x) * smoothing;
+								Sleep(during_sleep);
+							}
+							else if (loop_count == loop_stop)
+							{
+								Beep(650, 100);
+							}
+							else if (loop_count == 2 * loop_stop)
+							{
+								Beep(950, 100);
+							}
+							else if (loop_count > loop_stop)
+							{
+								Sleep(after_sleep);
+							}
+							else
+								Sleep(before_sleep);
+							/*
 							if (gazeDiff < mingazeDiff - gazeDiffToll)
 							{
 								event_happening = true;
-								if (loop_count == 0)
+								if (loop_count == 10)
 								{
 									Beep(950, 100);
 									Beep(850, 100);
 								}
+								else
+									Sleep(10);
 							}
+							*/
 						} // smoothing; }
-						if (gazeDirection.y < mingazeDirection.y) { smoothMouseY -= (mingazeDirection.y - gazeDirection.y) * smoothing; } // smoothing; }
-						else if (gazeDirection.y > maxgazeDirection.y) { smoothMouseY += (gazeDirection.y - maxgazeDirection.y) * smoothing; } // smoothing; }
-
+						/*
+						if (gazeDirection.y < mingazeDirection.y) 
+						{
+							event_happening = true;
+							if (loop_count > loop_start && loop_count < loop_stop)
+							{
+								smoothMouseY -= (mingazeDirection.y - gazeDirection.y) * smoothing;
+								Sleep(during_sleep);
+							}
+							else if (loop_count == loop_stop)
+							{
+								Beep(650, 100);
+							}
+							else if (loop_count == 2 * loop_stop)
+							{
+								Beep(950, 100);
+							}
+							else if (loop_count > loop_stop)
+							{
+								Sleep(after_sleep);
+							}
+							else
+								Sleep(before_sleep);
+						} // smoothing; }
+						else if (gazeDirection.y > maxgazeDirection.y) 
+						{
+							event_happening = true;
+							if (loop_count > loop_start && loop_count < loop_stop)
+							{
+								smoothMouseY += (gazeDirection.y - maxgazeDirection.y) * smoothing;
+								Sleep(during_sleep);
+							}
+							else if (loop_count == loop_stop)
+							{
+								Beep(650, 100);
+							}
+							else if (loop_count == 2 * loop_stop)
+							{
+								Beep(950, 100);
+							}
+							else if (loop_count > loop_stop)
+							{
+								Sleep(after_sleep);
+							}
+							else
+								Sleep(before_sleep); 
+						} // smoothing; }
+						*/
 						if (smoothMouseX < 0) { smoothMouseX = ScreenWidth; }
 						else if (smoothMouseX > ScreenWidth) { smoothMouseX = 0; }
 						if (smoothMouseY < 0) { smoothMouseY = ScreenHeight; }
@@ -627,6 +749,7 @@ int main (int argc, char **argv)
 
 					gazeDirection.x = (gazeDirection0.x + gazeDirection1.x - midgazeDirection0.x - midgazeDirection1.x) / 2.f;
 					gazeDirection.y = (gazeDirection0.y + gazeDirection1.y - midgazeDirection0.y - midgazeDirection1.y) / 2.f;
+					/*/
 					gazeDiff = sqrtf(
 						(gazeDirection0.y - gazeDirection1.y - midgazeDirection0.y - midgazeDirection1.y)
 						* (gazeDirection0.y - gazeDirection1.y - midgazeDirection0.y - midgazeDirection1.y) +
@@ -662,9 +785,18 @@ int main (int argc, char **argv)
 			cv::Mat blank_image;
 			blank_image = cv::Mat::zeros(captured_image.rows, captured_image.cols, CV_32F);
 			
-			blank_image = captured_image.clone();
+			// blank_image = captured_image.clone();
 			visualise_tracking(blank_image, depth_image, clnf_model, det_parameters, gazeDirection0, gazeDirection1, frame_count, fx, fy, cx, cy);
 			
+			cv::Mat blank_image_mirror = blank_image.clone();
+			for (int i = 0; i < captured_image.rows; i++) 
+			{
+				for (int j = 0; j < captured_image.cols; j++)
+				{
+
+				}
+			}
+
 			// output the tracked video
 			if (!output_video_files.empty())
 			{
@@ -741,7 +873,7 @@ int main (int argc, char **argv)
 
 					gazeDirection.x = 0; // (gazeDirection0.x + gazeDirection1.x - midgazeDirection0.x - midgazeDirection1.x) / 2.f;
 					gazeDirection.y = 0; // (gazeDirection0.y + gazeDirection1.y - midgazeDirection0.y - midgazeDirection1.y) / 2.f;
-					gazeDiff = 0; // sqrtf(
+					// gazeDiff = 0; // sqrtf(
 					
 					mingazeDirection = gazeDirection;
 					maxgazeDirection = gazeDirection;
