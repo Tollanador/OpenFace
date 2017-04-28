@@ -255,6 +255,14 @@ int main (int argc, char **argv)
 	cv::Point3f mingazeDirection1(0, 0, -1);
 	cv::Point3f maxgazeDirection0(0, 0, -1);
 	cv::Point3f maxgazeDirection1(0, 0, -1);
+	cv::Point3f mingazeDirection(0, 0, -1);
+	cv::Point3f maxgazeDirection(0, 0, -1);
+	cv::Point3f midgazeDirection0(0, 0, -1);
+	cv::Point3f midgazeDirection1(0, 0, -1);
+	float mingazeDiff = 0;
+	float maxgazeDiff = 0;
+	int loop_count = 0;
+	bool event_happening = false;
 	int ScreenWidth = ::GetSystemMetrics(SM_CXSCREEN);
 	int ScreenHeight = ::GetSystemMetrics(SM_CYSCREEN);
 
@@ -403,10 +411,25 @@ int main (int argc, char **argv)
 			cv::Point3f gazeDirection0(0, 0, -1);
 			cv::Point3f gazeDirection1(0, 0, -1);
 
+			cv::Point3f gazeDirection(0, 0, -1);
+			float gazeDiff;
+			/*
+			float gazeDirectionX;
+			float gazeDirectionY;
+			float gazeDirectionZ;
+			float gazeDiff;
+			*/
 			if (det_parameters.track_gaze && detection_success && clnf_model.eye_model)
 			{
 				FaceAnalysis::EstimateGaze(clnf_model, gazeDirection0, fx, fy, cx, cy, true);
 				FaceAnalysis::EstimateGaze(clnf_model, gazeDirection1, fx, fy, cx, cy, false);
+				/*
+				gazeDirection.x = (gazeDirection0.x + gazeDirection1.x) / 2.f;
+				gazeDirection.y = (gazeDirection0.y + gazeDirection1.y) / 2.f;
+				gazeDirection.z = (gazeDirection0.z + gazeDirection1.z) / 2.f;
+				gazeDiff = sqrtf(
+					(gazeDirection0.y - gazeDirection1.y) * (gazeDirection0.y - gazeDirection1.y) +
+					(gazeDirection0.x + gazeDirection1.x) * (gazeDirection0.x + gazeDirection1.x));
 
 				/*
 				//deltagazeDirection0 = gazeDirection0 - pregazeDirection0;
@@ -452,31 +475,138 @@ int main (int argc, char **argv)
 				*/
 				if (MouseControl && !MouseCalibrate) 
 				{
+					/*
+					{
+						//INFO_STREAM("gaze0: " << gazeDirection0.x << gazeDirection0.y << gazeDirection0.z);
+						//INFO_STREAM("gaze1: " << gazeDirection1.x << gazeDirection1.y << gazeDirection1.z);
+						if (gazeDirection0.x < mingazeDirection0.x) { mingazeDirection0.x = gazeDirection0.x; }
+						if (gazeDirection0.x > maxgazeDirection0.x) { maxgazeDirection0.x = gazeDirection0.x; }
+						if (gazeDirection0.y < mingazeDirection0.y) { mingazeDirection0.y = gazeDirection0.y; }
+						if (gazeDirection0.y > maxgazeDirection0.y) { maxgazeDirection0.y = gazeDirection0.y; }
+						if (gazeDirection0.z < mingazeDirection0.z) { mingazeDirection0.z = gazeDirection0.z; }
+						if (gazeDirection0.z > maxgazeDirection0.z) { maxgazeDirection0.z = gazeDirection0.z; }
+						if (gazeDirection1.x < mingazeDirection1.x) { mingazeDirection1.x = gazeDirection1.x; }
+						if (gazeDirection1.x > maxgazeDirection1.x) { maxgazeDirection1.x = gazeDirection1.x; }
+						if (gazeDirection1.y < mingazeDirection1.y) { mingazeDirection1.y = gazeDirection1.y; }
+						if (gazeDirection1.y > maxgazeDirection1.y) { maxgazeDirection1.y = gazeDirection1.y; }
+						if (gazeDirection1.z < mingazeDirection1.z) { mingazeDirection1.z = gazeDirection1.z; }
+						if (gazeDirection1.z > maxgazeDirection1.z) { maxgazeDirection1.z = gazeDirection1.z; }
+					}
 					/*if (gazeDirection0.x > mingazeDirection0.x && gazeDirection0.x < maxgazeDirection0.x &&
 						gazeDirection0.y > mingazeDirection0.y && gazeDirection0.y < maxgazeDirection0.y &&
 						gazeDirection0.z > mingazeDirection0.z && gazeDirection0.z < maxgazeDirection0.z &&
 						gazeDirection1.x > mingazeDirection1.x && gazeDirection1.x < maxgazeDirection1.x &&
 						gazeDirection0.y > mingazeDirection1.y && gazeDirection1.y < maxgazeDirection1.y &&
 						gazeDirection0.z > mingazeDirection1.z && gazeDirection1.z < maxgazeDirection1.z) 
-					*/{
+					*{
 						//float mx0 = (gazeDirection0.x - mingazeDirection0.x) / (maxgazeDirection0.x - mingazeDirection0.x);
 						float mx0 = (maxgazeDirection0.x - gazeDirection0.x) / (maxgazeDirection0.x - mingazeDirection0.x);
 						float my0 = (gazeDirection0.y - mingazeDirection0.y) / (maxgazeDirection0.y - mingazeDirection0.y);
 						float mx1 = (maxgazeDirection1.x - gazeDirection1.x) / (maxgazeDirection1.x - mingazeDirection1.x);
 						float my1 = (gazeDirection1.y - mingazeDirection1.y) / (maxgazeDirection1.y - mingazeDirection1.y);
-						int mx = (mx0 + mx1) * ScreenWidth / 4;
-						int my = (my0 + my1) * ScreenHeight / 4;
+						// int mx = (mx0 + mx1) * ScreenWidth / 4;
+						// int my = (my0 + my1) * ScreenHeight / 4;
+						int mx = (mx0 + mx1) * ScreenWidth / 2;
+						int my = (my0 + my1) * ScreenHeight / 2;
 						//MousePosition(mx, my);
 						int smoothing = 10;
 						smoothMouseX = (smoothMouseX * smoothing + mx) / (smoothing + 1);
 						smoothMouseY = (smoothMouseY * smoothing + my) / (smoothing + 1);
+						// smoothMouseX = mx;
+						// smoothMouseY = my;
 						MousePosition(smoothMouseX, smoothMouseY);
+					}
+						*/
+					// Sleep(100);
+
+					gazeDirection.x = (gazeDirection0.x + gazeDirection1.x - midgazeDirection0.x - midgazeDirection1.x) / 2.f;
+					gazeDirection.y = (gazeDirection0.y + gazeDirection1.y - midgazeDirection0.y - midgazeDirection1.y) / 2.f;
+					gazeDiff = sqrtf(
+						(gazeDirection0.y - gazeDirection1.y - midgazeDirection0.y - midgazeDirection1.y)
+						* (gazeDirection0.y - gazeDirection1.y - midgazeDirection0.y - midgazeDirection1.y) +
+						(gazeDirection0.x + gazeDirection1.x - midgazeDirection0.x - midgazeDirection1.x)
+						* (gazeDirection0.x + gazeDirection1.x - midgazeDirection0.x - midgazeDirection1.x));
+
+					float gazeDiffToll = (maxgazeDiff - mingazeDiff) * 0;
+
+					if (gazeDirection.x > mingazeDirection.x && gazeDirection.x < maxgazeDirection.x &&
+						gazeDirection.y > mingazeDirection.y && gazeDirection.y < maxgazeDirection.y)
+					{
+						if (gazeDiff > maxgazeDiff + gazeDiffToll)
+						{
+							event_happening = true;
+							if (loop_count ==  0)
+								Beep(750, 200);
+						}
+						else if (gazeDiff < mingazeDiff - gazeDiffToll)
+						{
+							event_happening = true;
+							if (loop_count == 0)
+								Beep(850, 200);
+						}
+					}
+					else
+					{
+						POINT p;
+						if (GetCursorPos(&p))
+						{
+							if (smoothMouseX != p.x) smoothMouseX = p.x;
+							if (smoothMouseY != p.y) smoothMouseY = p.y;
+						}
+
+						int smoothing = 1000;
+						int smoothMouseX_old = smoothMouseX;
+						int smoothMouseY_old = smoothMouseY;
+						/*
+						if (gazeDirection0.x < mingazeDirection0.x) { smoothMouseX += (mingazeDirection0.x - gazeDirection0.x) * smoothing; } // smoothing; }
+						else if (gazeDirection0.x > maxgazeDirection0.x) { smoothMouseX -= (gazeDirection0.x - maxgazeDirection0.x) * smoothing; } // smoothing; }
+						if (gazeDirection0.y < mingazeDirection0.y) { smoothMouseY -= (mingazeDirection0.y - gazeDirection0.y) * smoothing; } // smoothing; }
+						else if (gazeDirection0.y > maxgazeDirection0.y) { smoothMouseY += (gazeDirection0.y - maxgazeDirection0.y) * smoothing; } // smoothing; }
+						*/
+
+						if (gazeDirection.x < mingazeDirection.x) 
+						{ 
+							smoothMouseX += (mingazeDirection.x - gazeDirection.x) * smoothing; 
+							if (gazeDiff < mingazeDiff - gazeDiffToll)
+							{
+								event_happening = true;
+								if (loop_count == 0)
+								{
+									Beep(850, 100);
+									Beep(950, 100);
+								}
+							}
+						} // smoothing; }
+						else if (gazeDirection.x > maxgazeDirection.x) 
+						{ 
+							smoothMouseX -= (gazeDirection.x - maxgazeDirection.x) * smoothing;
+							if (gazeDiff < mingazeDiff - gazeDiffToll)
+							{
+								event_happening = true;
+								if (loop_count == 0)
+								{
+									Beep(950, 100);
+									Beep(850, 100);
+								}
+							}
+						} // smoothing; }
+						if (gazeDirection.y < mingazeDirection.y) { smoothMouseY -= (mingazeDirection.y - gazeDirection.y) * smoothing; } // smoothing; }
+						else if (gazeDirection.y > maxgazeDirection.y) { smoothMouseY += (gazeDirection.y - maxgazeDirection.y) * smoothing; } // smoothing; }
+
+						if (smoothMouseX < 0) { smoothMouseX = ScreenWidth; }
+						else if (smoothMouseX > ScreenWidth) { smoothMouseX = 0; }
+						if (smoothMouseY < 0) { smoothMouseY = ScreenHeight; }
+						else if (smoothMouseY > ScreenHeight) { smoothMouseY = 0; }
+
+						if (smoothMouseX != smoothMouseX_old || smoothMouseY != smoothMouseY_old)
+							MousePosition(smoothMouseX, smoothMouseY);
 					}
 				}
 				else if (!MouseControl && MouseCalibrate)
 				{
 					//INFO_STREAM("gaze0: " << gazeDirection0.x << gazeDirection0.y << gazeDirection0.z);
 					//INFO_STREAM("gaze1: " << gazeDirection1.x << gazeDirection1.y << gazeDirection1.z);
+					//*
 					if (gazeDirection0.x < mingazeDirection0.x) { mingazeDirection0.x = gazeDirection0.x; }
 					if (gazeDirection0.x > maxgazeDirection0.x) { maxgazeDirection0.x = gazeDirection0.x; }
 					if (gazeDirection0.y < mingazeDirection0.y) { mingazeDirection0.y = gazeDirection0.y; }
@@ -489,15 +619,56 @@ int main (int argc, char **argv)
 					if (gazeDirection1.y > maxgazeDirection1.y) { maxgazeDirection1.y = gazeDirection1.y; }
 					if (gazeDirection1.z < mingazeDirection1.z) { mingazeDirection1.z = gazeDirection1.z; }
 					if (gazeDirection1.z > maxgazeDirection1.z) { maxgazeDirection1.z = gazeDirection1.z; }
+
+					midgazeDirection0.x = mingazeDirection0.x + (maxgazeDirection0.x - mingazeDirection0.x) / 2;
+					midgazeDirection1.x = mingazeDirection1.x + (maxgazeDirection1.x - mingazeDirection1.x) / 2;
+					midgazeDirection0.y = mingazeDirection0.y + (maxgazeDirection0.y - mingazeDirection0.y) / 2;
+					midgazeDirection1.y = mingazeDirection1.y + (maxgazeDirection1.y - mingazeDirection1.y) / 2;
+
+					gazeDirection.x = (gazeDirection0.x + gazeDirection1.x - midgazeDirection0.x - midgazeDirection1.x) / 2.f;
+					gazeDirection.y = (gazeDirection0.y + gazeDirection1.y - midgazeDirection0.y - midgazeDirection1.y) / 2.f;
+					gazeDiff = sqrtf(
+						(gazeDirection0.y - gazeDirection1.y - midgazeDirection0.y - midgazeDirection1.y)
+						* (gazeDirection0.y - gazeDirection1.y - midgazeDirection0.y - midgazeDirection1.y) +
+						(gazeDirection0.x + gazeDirection1.x - midgazeDirection0.x - midgazeDirection1.x)
+						* (gazeDirection0.x + gazeDirection1.x - midgazeDirection0.x - midgazeDirection1.x));
+					//*/
+					if (gazeDirection.x < mingazeDirection.x) { mingazeDirection.x = gazeDirection.x; }
+					if (gazeDirection.x > maxgazeDirection.x) { maxgazeDirection.x = gazeDirection.x; }
+					if (gazeDirection.y < mingazeDirection.y) { mingazeDirection.y = gazeDirection.y; }
+					if (gazeDirection.y > maxgazeDirection.y) { maxgazeDirection.y = gazeDirection.y; }
+					//*/
+					if (gazeDiff > maxgazeDiff) { maxgazeDiff = gazeDiff; }
+					if (gazeDiff < mingazeDiff) { mingazeDiff = gazeDiff; }
+					//*/
+					event_happening = true;
+
+					if (loop_count > 100)
+					{
+						Beep(750, 100);
+						Beep(850, 100);
+						Beep(750, 100);
+						MouseControl = true;
+						MouseCalibrate = false;
+						INFO_STREAM("Mouse Control ON");
+					}
+					else
+					{
+						Sleep(10);
+					}
 				}
 			}
 
-			visualise_tracking(captured_image, depth_image, clnf_model, det_parameters, gazeDirection0, gazeDirection1, frame_count, fx, fy, cx, cy);
+			cv::Mat blank_image;
+			blank_image = cv::Mat::zeros(captured_image.rows, captured_image.cols, CV_32F);
+			
+			blank_image = captured_image.clone();
+			visualise_tracking(blank_image, depth_image, clnf_model, det_parameters, gazeDirection0, gazeDirection1, frame_count, fx, fy, cx, cy);
 			
 			// output the tracked video
 			if (!output_video_files.empty())
 			{
-				writerFace << captured_image;
+				writerFace << blank_image;
 			}
 
 
@@ -556,13 +727,28 @@ int main (int argc, char **argv)
 					MouseControl = false;
 					MouseCalibrate = true;
 					INFO_STREAM("Mouse Control OFF");
+					
 					mingazeDirection0 = gazeDirection0;
 					maxgazeDirection0 = gazeDirection0;
+					midgazeDirection0 = gazeDirection0;
 					mingazeDirection1 = gazeDirection1;
 					maxgazeDirection1 = gazeDirection1;
+					midgazeDirection1 = gazeDirection1;
+					
 					MousePosition(ScreenWidth / 2, ScreenHeight / 2);
 					smoothMouseX = ScreenWidth / 2;
 					smoothMouseY = ScreenHeight / 2;
+
+					gazeDirection.x = 0; // (gazeDirection0.x + gazeDirection1.x - midgazeDirection0.x - midgazeDirection1.x) / 2.f;
+					gazeDirection.y = 0; // (gazeDirection0.y + gazeDirection1.y - midgazeDirection0.y - midgazeDirection1.y) / 2.f;
+					gazeDiff = 0; // sqrtf(
+					
+					mingazeDirection = gazeDirection;
+					maxgazeDirection = gazeDirection;
+					midgazeDirection0 = gazeDirection0;
+					midgazeDirection1 = gazeDirection1;
+					maxgazeDiff = gazeDiff;
+					mingazeDiff = gazeDiff;
 				}
 				else 
 				{ 
@@ -591,6 +777,18 @@ int main (int argc, char **argv)
 			// Update the frame count
 			frame_count++;
 
+			if (event_happening)
+			{
+				loop_count++;
+				event_happening = false;
+			}
+			else
+			{
+				if (loop_count > 0)
+					loop_count = 0;
+				Sleep(100);
+			}
+			// Sleep(100);
 		}
 		
 		frame_count = 0;
