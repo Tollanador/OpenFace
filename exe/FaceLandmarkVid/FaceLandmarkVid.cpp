@@ -74,6 +74,13 @@
 #include <filesystem.hpp>
 #include <filesystem/fstream.hpp>
 
+// Magnification API includes
+// #include "windows.h"
+// #include "resource.h"
+// #include "strsafe.h"
+#include "magnification.h"
+// magnification.lib;
+
 #define INFO_STREAM( stream ) \
 std::cout << stream << std::endl
 
@@ -160,7 +167,7 @@ void visualise_tracking(cv::Mat& captured_image, cv::Mat_<float>& depth_image, c
 	std::sprintf(fpsC, "%d", (int)fps_tracker);
 	string fpsSt("FPS:");
 	fpsSt += fpsC;
-	cv::putText(captured_image, fpsSt, cv::Point(10, 20), CV_FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(255, 0, 0));
+	cv::putText(captured_image, fpsSt, cv::Point(10, 20), CV_FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(255, 255, 255));
 
 	if (!det_parameters.quiet_mode)
 	{
@@ -170,7 +177,7 @@ void visualise_tracking(cv::Mat& captured_image, cv::Mat_<float>& depth_image, c
 		if (!depth_image.empty())
 		{
 			// Division needed for visualisation purposes
-			imshow("depth", depth_image / 2000.0);
+			cv::imshow("depth", depth_image / 2000.0);
 		}
 
 	}
@@ -249,6 +256,7 @@ int main (int argc, char **argv)
 	*/
 	int smoothMouseX = 1000;
 	int smoothMouseY = 500;
+	int smoothing = 1000;
 	bool MouseControl = true;
 	bool MouseCalibrate = true;
 	cv::Point3f mingazeDirection0(0, 0, -1);
@@ -261,6 +269,15 @@ int main (int argc, char **argv)
 	cv::Point3f midgazeDirection1(0, 0, -1);
 	float mingazeDiff = 0;
 	float maxgazeDiff = 0;
+	
+	float ScreenX = (float)GetSystemMetrics(SM_CXSCREEN);
+	float ScreenY = (float)GetSystemMetrics(SM_CYSCREEN);
+	float magFactor = 1.f;
+	float MagScreenX = ScreenX / magFactor;
+	float MagScreenY = ScreenY / magFactor;
+	int xDlg = 0;
+	int yDlg = 0;
+	
 	int loop_count = 0;
 	bool event_happening = false;
 	int ScreenWidth = ::GetSystemMetrics(SM_CXSCREEN);
@@ -529,7 +546,7 @@ int main (int argc, char **argv)
 						(gazeDirection0.x + gazeDirection1.x - midgazeDirection0.x - midgazeDirection1.x)
 						* (gazeDirection0.x + gazeDirection1.x - midgazeDirection0.x - midgazeDirection1.x));
 					*/
-					float gazeDiffToll = (maxgazeDiff - mingazeDiff) * 0.01;
+					float gazeDiffToll = (maxgazeDiff - mingazeDiff) * 0.0001;
 					/*
 					if (gazeDiff > maxgazeDiff + gazeDiffToll)
 					{
@@ -555,8 +572,62 @@ int main (int argc, char **argv)
 						if (gazeDiff > maxgazeDiff + gazeDiffToll)
 						{
 							event_happening = true;
-							if (loop_count ==  10)
-								Beep(750, 100);
+							if (loop_count == 10)
+							{
+								Beep(750, 100); 
+								if (magFactor == 1.f)
+								{
+									magFactor = 3.f;
+									smoothing /= magFactor;
+								}
+								else
+								{
+									magFactor = 1.f;
+									smoothing = 1000;
+								}
+								MagScreenX = ScreenX / magFactor;
+								MagScreenY = ScreenY / magFactor;
+
+								POINT p;
+								if (GetCursorPos(&p))
+								{
+									xDlg = (int)((float)p.x - MagScreenX / 2.0);
+									yDlg = (int)((float)p.y - MagScreenY / 2.0);
+
+									if (xDlg > ScreenX - MagScreenX)
+										xDlg = ScreenX - MagScreenX;
+									else if (xDlg < 0)
+										xDlg = 0;
+
+									if (yDlg > ScreenY - MagScreenY)
+										yDlg = ScreenY - MagScreenY;
+									else if (yDlg < 0)
+										yDlg = 0;
+								}
+								else
+								{
+									xDlg = (int)(ScreenX * (1.0 - (1.0 / magFactor)) / 2.0);
+									yDlg = (int)(ScreenY * (1.0 - (1.0 / magFactor)) / 2.0);
+								}
+
+								BOOL fSuccess = MagSetFullscreenTransform(magFactor, xDlg, yDlg);
+								if (fSuccess)
+								{
+									// If an input transform for pen and touch is currently applied, update the transform
+									// to account for the new magnification.
+									BOOL fInputTransformEnabled;
+									RECT rcInputTransformSource;
+									RECT rcInputTransformDest;
+
+									if (MagGetInputTransform(&fInputTransformEnabled, &rcInputTransformSource, &rcInputTransformDest))
+									{
+										if (fInputTransformEnabled)
+										{
+											// SetInputTransform(hwndDlg, fInputTransformEnabled);
+										}
+									}
+								}
+							}
 							else
 								Sleep(10);
 						}
@@ -564,7 +635,62 @@ int main (int argc, char **argv)
 						{
 							event_happening = true;
 							if (loop_count == 10)
+							{
 								Beep(850, 100);
+
+								if (magFactor == 1.f)
+								{
+									magFactor = 2.f;
+									smoothing /= magFactor;
+								}
+								else
+								{
+									magFactor = 1.f;
+									smoothing = 1000;
+								}
+								MagScreenX = ScreenX / magFactor;
+								MagScreenY = ScreenY / magFactor;
+
+								POINT p;
+								if (GetCursorPos(&p))
+								{
+									xDlg = (int)((float)p.x - MagScreenX / 2.0);
+									yDlg = (int)((float)p.y - MagScreenY / 2.0);
+
+									if (xDlg > ScreenX - MagScreenX)
+										xDlg = ScreenX - MagScreenX;
+									else if (xDlg < 0)
+										xDlg = 0;
+
+									if (yDlg > ScreenY - MagScreenY)
+										yDlg = ScreenY - MagScreenY;
+									else if (yDlg < 0)
+										yDlg = 0;
+								}
+								else
+								{
+									xDlg = (int)(ScreenX * (1.0 - (1.0 / magFactor)) / 2.0);
+									yDlg = (int)(ScreenY * (1.0 - (1.0 / magFactor)) / 2.0);
+								}
+
+								BOOL fSuccess = MagSetFullscreenTransform(magFactor, xDlg, yDlg);
+								if (fSuccess)
+								{
+									// If an input transform for pen and touch is currently applied, update the transform
+									// to account for the new magnification.
+									BOOL fInputTransformEnabled;
+									RECT rcInputTransformSource;
+									RECT rcInputTransformDest;
+
+									if (MagGetInputTransform(&fInputTransformEnabled, &rcInputTransformSource, &rcInputTransformDest))
+									{
+										if (fInputTransformEnabled)
+										{
+											// SetInputTransform(hwndDlg, fInputTransformEnabled);
+										}
+									}
+								}
+							}
 							else
 								Sleep(10);
 						}
@@ -572,6 +698,7 @@ int main (int argc, char **argv)
 					}
 					else
 					{
+						/*
 						POINT p;
 						if (GetCursorPos(&p))
 						{
@@ -594,7 +721,58 @@ int main (int argc, char **argv)
 						int before_sleep = 30;
 						int during_sleep = 30;
 						int after_sleep = 80;
+						
+						event_happening = true;
 
+						if (loop_count > loop_start && loop_count < loop_stop)
+						{
+							POINT p;
+							if (GetCursorPos(&p))
+							{
+								if (smoothMouseX != p.x) smoothMouseX = p.x;
+								if (smoothMouseY != p.y) smoothMouseY = p.y;
+							}
+
+							// int smoothing = 1000;
+							int smoothMouseX_old = smoothMouseX;
+							int smoothMouseY_old = smoothMouseY;
+
+							if (gazeDirection.x < mingazeDirection.x) 
+								smoothMouseX += (mingazeDirection.x - gazeDirection.x) * smoothing;
+							else if (gazeDirection.x > maxgazeDirection.x) 
+								smoothMouseX -= (gazeDirection.x - maxgazeDirection.x) * smoothing;
+
+							if (gazeDirection.y < mingazeDirection.y)
+								smoothMouseY -= (mingazeDirection.y - gazeDirection.y) * smoothing;
+							else if (gazeDirection.y > maxgazeDirection.y)
+								smoothMouseY += (gazeDirection.y - maxgazeDirection.y) * smoothing;
+
+							if (smoothMouseX < xDlg) { smoothMouseX = xDlg + MagScreenX; }
+							else if (smoothMouseX > xDlg + MagScreenX) { smoothMouseX = xDlg; }
+							if (smoothMouseY < yDlg) { smoothMouseY = yDlg + MagScreenY; }
+							else if (smoothMouseY > yDlg + MagScreenY) { smoothMouseY = yDlg; }
+
+							if (smoothMouseX != smoothMouseX_old || smoothMouseY != smoothMouseY_old)
+								MousePosition(smoothMouseX, smoothMouseY);
+
+							Sleep(during_sleep);
+						}
+						else if (loop_count == loop_stop)
+						{
+							Beep(650, 100);
+						}
+						else if (loop_count == 2 * loop_stop)
+						{
+							Beep(950, 100);
+						}
+						else if (loop_count > loop_stop)
+						{
+							Sleep(after_sleep);
+						}
+						else
+							Sleep(before_sleep);
+
+						/*
 						if (gazeDirection.x < mingazeDirection.x) 
 						{
 							event_happening = true;
@@ -629,7 +807,7 @@ int main (int argc, char **argv)
 								else
 									Sleep(10);
 							}
-							*/
+							*
 						} // smoothing; }
 						else if (gazeDirection.x > maxgazeDirection.x) 
 						{
@@ -665,7 +843,7 @@ int main (int argc, char **argv)
 								else
 									Sleep(10);
 							}
-							*/
+							*
 						} // smoothing; }
 						/*
 						if (gazeDirection.y < mingazeDirection.y) 
@@ -714,14 +892,21 @@ int main (int argc, char **argv)
 							else
 								Sleep(before_sleep); 
 						} // smoothing; }
-						*/
+						*
 						if (smoothMouseX < 0) { smoothMouseX = ScreenWidth; }
 						else if (smoothMouseX > ScreenWidth) { smoothMouseX = 0; }
 						if (smoothMouseY < 0) { smoothMouseY = ScreenHeight; }
 						else if (smoothMouseY > ScreenHeight) { smoothMouseY = 0; }
+						*
+
+						if (smoothMouseX < xDlg) { smoothMouseX = xDlg + MagScreenX; }
+						else if (smoothMouseX > xDlg + MagScreenX) { smoothMouseX = xDlg; }
+						if (smoothMouseY < yDlg) { smoothMouseY = yDlg + MagScreenY; }
+						else if (smoothMouseY > yDlg + MagScreenY) { smoothMouseY = yDlg; }
 
 						if (smoothMouseX != smoothMouseX_old || smoothMouseY != smoothMouseY_old)
 							MousePosition(smoothMouseX, smoothMouseY);
+						//*/
 					}
 				}
 				else if (!MouseControl && MouseCalibrate)
@@ -786,8 +971,9 @@ int main (int argc, char **argv)
 			blank_image = cv::Mat::zeros(captured_image.rows, captured_image.cols, CV_32F);
 			
 			// blank_image = captured_image.clone();
+			// blank_image = grayscale_image.clone();
 			visualise_tracking(blank_image, depth_image, clnf_model, det_parameters, gazeDirection0, gazeDirection1, frame_count, fx, fy, cx, cy);
-			
+			/*
 			cv::Mat blank_image_mirror = blank_image.clone();
 			for (int i = 0; i < captured_image.rows; i++) 
 			{
@@ -796,11 +982,12 @@ int main (int argc, char **argv)
 
 				}
 			}
+			*/
 
 			// output the tracked video
 			if (!output_video_files.empty())
 			{
-				writerFace << blank_image;
+				writerFace << captured_image;
 			}
 
 
