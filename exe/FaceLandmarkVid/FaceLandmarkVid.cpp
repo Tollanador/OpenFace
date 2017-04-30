@@ -78,7 +78,7 @@
 // #include "windows.h"
 // #include "resource.h"
 // #include "strsafe.h"
-#include "magnification.h"
+#include "Magnification.h"
 // magnification.lib;
 
 #define INFO_STREAM( stream ) \
@@ -283,6 +283,7 @@ int main (int argc, char **argv)
 	int ScreenWidth = ::GetSystemMetrics(SM_CXSCREEN);
 	int ScreenHeight = ::GetSystemMetrics(SM_CYSCREEN);
 
+	MagInitialize();
 
 	while(!done) // this is not a for loop as we might also be reading from a webcam
 	{
@@ -402,7 +403,7 @@ int main (int argc, char **argv)
 				std::stringstream sstream;
 
 				sstream << depth_directories[f_n] << "\\depth%05d.png";
-				sprintf(dst, sstream.str().c_str(), frame_count + 1);
+				std::sprintf(dst, sstream.str().c_str(), frame_count + 1);
 				// Reading in 16-bit png image representing depth
 				cv::Mat_<short> depth_image_16_bit = cv::imread(string(dst), -1);
 
@@ -1032,6 +1033,168 @@ int main (int argc, char **argv)
 			{
 				INFO_STREAM("Screen Size: " << ::GetSystemMetrics(SM_CXSCREEN) << ", " << ::GetSystemMetrics(SM_CYSCREEN));
 			}
+			if (character_press == '1')
+			{
+				//Beep(850, 100);
+
+				if (magFactor != 1.f)
+				{
+					magFactor = 1.f;
+					smoothing = 1000;
+
+					MagScreenX = ScreenX / magFactor;
+					MagScreenY = ScreenY / magFactor;
+
+					POINT p;
+					if (GetCursorPos(&p))
+					{
+						xDlg = (int)((float)p.x - MagScreenX / 2.0);
+						yDlg = (int)((float)p.y - MagScreenY / 2.0);
+
+						if (xDlg > ScreenX - MagScreenX)
+							xDlg = ScreenX - MagScreenX;
+						else if (xDlg < 0)
+							xDlg = 0;
+
+						if (yDlg > ScreenY - MagScreenY)
+							yDlg = ScreenY - MagScreenY;
+						else if (yDlg < 0)
+							yDlg = 0;
+					}
+					else
+					{
+						xDlg = (int)(ScreenX * (1.0 - (1.0 / magFactor)) / 2.0);
+						yDlg = (int)(ScreenY * (1.0 - (1.0 / magFactor)) / 2.0);
+					}
+
+					BOOL fSuccess = MagSetFullscreenTransform(magFactor, xDlg, yDlg);
+					if (fSuccess)
+					{
+						Beep(850, 100);
+						// If an input transform for pen and touch is currently applied, update the transform
+						// to account for the new magnification.
+						BOOL fInputTransformEnabled;
+						RECT rcInputTransformSource;
+						RECT rcInputTransformDest;
+
+						if (MagGetInputTransform(&fInputTransformEnabled, &rcInputTransformSource, &rcInputTransformDest))
+						{
+							if (fInputTransformEnabled)
+							{
+								// SetInputTransform(hwndDlg, fInputTransformEnabled);
+							}
+						}
+					}
+				}
+			}
+			if (character_press == '2')
+			{
+				//Beep(850, 100);
+
+				if (magFactor != 2.f)
+				{
+					magFactor = 2.f;
+					smoothing = 1000;
+
+					MagScreenX = ScreenX / magFactor;
+					MagScreenY = ScreenY / magFactor;
+
+					POINT p;
+					if (GetCursorPos(&p))
+					{
+						xDlg = (int)((float)p.x - MagScreenX / 2.0);
+						yDlg = (int)((float)p.y - MagScreenY / 2.0);
+
+						if (xDlg > ScreenX - MagScreenX)
+							xDlg = ScreenX - MagScreenX;
+						else if (xDlg < 0)
+							xDlg = 0;
+
+						if (yDlg > ScreenY - MagScreenY)
+							yDlg = ScreenY - MagScreenY;
+						else if (yDlg < 0)
+							yDlg = 0;
+					}
+					else
+					{
+						xDlg = (int)(ScreenX * (1.0 - (1.0 / magFactor)) / 2.0);
+						yDlg = (int)(ScreenY * (1.0 - (1.0 / magFactor)) / 2.0);
+					}
+
+					BOOL fSuccess = MagSetFullscreenTransform(magFactor, xDlg, yDlg);
+					if (fSuccess)
+					{
+						Beep(850, 100);
+						// If an input transform for pen and touch is currently applied, update the transform
+						// to account for the new magnification.
+						BOOL fInputTransformEnabled;
+						RECT rcInputTransformSource;
+						RECT rcInputTransformDest;
+
+						if (MagGetInputTransform(&fInputTransformEnabled, &rcInputTransformSource, &rcInputTransformDest))
+						{
+							if (fInputTransformEnabled)
+							{
+								// SetInputTransform(hwndDlg, fInputTransformEnabled);
+							}
+						}
+					}
+				}
+			}
+			if (character_press == '3')
+			{
+				// Beep(850, 100);
+
+				if (magFactor != 3.f)
+				{
+					magFactor = 3.f;
+					smoothing = 1000;
+
+					MagScreenX = ScreenX / magFactor;
+					MagScreenY = ScreenY / magFactor;
+
+					POINT p;
+					if (GetCursorPos(&p))
+					{
+						xDlg = (int)((float)p.x - MagScreenX / 2.0);
+						yDlg = (int)((float)p.y - MagScreenY / 2.0);
+
+						if (xDlg > ScreenX - MagScreenX)
+							xDlg = ScreenX - MagScreenX;
+						else if (xDlg < 0)
+							xDlg = 0;
+
+						if (yDlg > ScreenY - MagScreenY)
+							yDlg = ScreenY - MagScreenY;
+						else if (yDlg < 0)
+							yDlg = 0;
+					}
+					else
+					{
+						xDlg = (int)(ScreenX * (1.0 - (1.0 / magFactor)) / 2.0);
+						yDlg = (int)(ScreenY * (1.0 - (1.0 / magFactor)) / 2.0);
+					}
+
+					BOOL fSuccess = MagSetFullscreenTransform(magFactor, xDlg, yDlg);
+					if (fSuccess)
+					{
+						Beep(850, 100);
+						// If an input transform for pen and touch is currently applied, update the transform
+						// to account for the new magnification.
+						BOOL fInputTransformEnabled;
+						RECT rcInputTransformSource;
+						RECT rcInputTransformDest;
+
+						if (MagGetInputTransform(&fInputTransformEnabled, &rcInputTransformSource, &rcInputTransformDest))
+						{
+							if (fInputTransformEnabled)
+							{
+								// SetInputTransform(hwndDlg, fInputTransformEnabled);
+							}
+						}
+					}
+				}
+			}
 			// restart the mouse
 			if (character_press == 'm')
 			{
@@ -1109,7 +1272,7 @@ int main (int argc, char **argv)
 			}
 			// Sleep(100);
 		}
-		
+		MagUninitialize();
 		frame_count = 0;
 
 		// Reset the model, for the next video
