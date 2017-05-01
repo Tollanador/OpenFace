@@ -431,145 +431,33 @@ int main (int argc, char **argv)
 
 			cv::Point3f gazeDirection(0, 0, -1);
 			float gazeDiff;
-			/*
-			float gazeDirectionX;
-			float gazeDirectionY;
-			float gazeDirectionZ;
-			float gazeDiff;
-			*/
+
 			if (det_parameters.track_gaze && detection_success && clnf_model.eye_model)
 			{
 				FaceAnalysis::EstimateGaze(clnf_model, gazeDirection0, fx, fy, cx, cy, true);
 				FaceAnalysis::EstimateGaze(clnf_model, gazeDirection1, fx, fy, cx, cy, false);
-				/*
-				gazeDirection.x = (gazeDirection0.x + gazeDirection1.x) / 2.f;
-				gazeDirection.y = (gazeDirection0.y + gazeDirection1.y) / 2.f;
-				gazeDirection.z = (gazeDirection0.z + gazeDirection1.z) / 2.f;
-				*/
+				
 				gazeDiff = sqrtf(
 					(gazeDirection0.y - gazeDirection1.y) * (gazeDirection0.y - gazeDirection1.y) +
 					(gazeDirection0.x - gazeDirection1.x) * (gazeDirection0.x - gazeDirection1.x));
 
-				/*
-				//deltagazeDirection0 = gazeDirection0 - pregazeDirection0;
-				//deltagazeDirection1 = gazeDirection1 - pregazeDirection1;
-
-				//float deltaX = gazeDirection0.x - pregazeDirection0.x;
-				//float deltaY = gazeDirection0.y - pregazeDirection0.y;
-				float deltaX = (gazeDirection0.x - pregazeDirection0.x + gazeDirection1.x - pregazeDirection1.x) / 2;
-				float deltaY = (gazeDirection0.y - pregazeDirection0.y + gazeDirection1.y - pregazeDirection1.y) / 2;
-				//float deltaZ = (gazeDirection0.z - pregazeDirection0.z + gazeDirection1.z - pregazeDirection1.z) / 2;
-				
-				int mouse_mult = 100000;
-				float mouse_min = 0.005;
-
-				//deltaX = deltaX;
-				//deltaY = 0;
-
-				//if (deltagazeDirection0.x > mouse_min) {
-				if (abs(deltaX) > mouse_min) {
-					MouseX -= deltaX * mouse_mult;
-					if (MouseX < 0) { MouseX = 0; }
-					else if (MouseX > 2000) { MouseX = 2000; }
-				}
-				if (abs(deltaY) > mouse_min) {
-					MouseY -= deltaY * mouse_mult;
-					if (MouseY < 0) { MouseY = 0; }
-					else if (MouseY > 1000) { MouseY = 1000; }
-				}
-				/*
-				MouseY += deltagazeDirection0.y * mouse_mult;
-				if (MouseY < 0) { MouseY = 0; }
-				else if (MouseY > 1000) { MouseY = 1000; }
-				*
-				//MouseMove(MouseX, MouseY);
-				//MouseMove(100,100);
-				int smoothing = 40;
-				smoothMouseX = (smoothMouseX * smoothing + MouseX) / (smoothing + 1);
-				smoothMouseY = (smoothMouseY * smoothing + MouseY) / (smoothing + 1);
-				MousePosition(smoothMouseX, smoothMouseY);
-
-				pregazeDirection0 = gazeDirection0;
-				pregazeDirection1 = gazeDirection1;
-				*/
 				if (MouseControl && !MouseCalibrate) 
 				{
-					/*
-					{
-						//INFO_STREAM("gaze0: " << gazeDirection0.x << gazeDirection0.y << gazeDirection0.z);
-						//INFO_STREAM("gaze1: " << gazeDirection1.x << gazeDirection1.y << gazeDirection1.z);
-						if (gazeDirection0.x < mingazeDirection0.x) { mingazeDirection0.x = gazeDirection0.x; }
-						if (gazeDirection0.x > maxgazeDirection0.x) { maxgazeDirection0.x = gazeDirection0.x; }
-						if (gazeDirection0.y < mingazeDirection0.y) { mingazeDirection0.y = gazeDirection0.y; }
-						if (gazeDirection0.y > maxgazeDirection0.y) { maxgazeDirection0.y = gazeDirection0.y; }
-						if (gazeDirection0.z < mingazeDirection0.z) { mingazeDirection0.z = gazeDirection0.z; }
-						if (gazeDirection0.z > maxgazeDirection0.z) { maxgazeDirection0.z = gazeDirection0.z; }
-						if (gazeDirection1.x < mingazeDirection1.x) { mingazeDirection1.x = gazeDirection1.x; }
-						if (gazeDirection1.x > maxgazeDirection1.x) { maxgazeDirection1.x = gazeDirection1.x; }
-						if (gazeDirection1.y < mingazeDirection1.y) { mingazeDirection1.y = gazeDirection1.y; }
-						if (gazeDirection1.y > maxgazeDirection1.y) { maxgazeDirection1.y = gazeDirection1.y; }
-						if (gazeDirection1.z < mingazeDirection1.z) { mingazeDirection1.z = gazeDirection1.z; }
-						if (gazeDirection1.z > maxgazeDirection1.z) { maxgazeDirection1.z = gazeDirection1.z; }
-					}
-					/*if (gazeDirection0.x > mingazeDirection0.x && gazeDirection0.x < maxgazeDirection0.x &&
-						gazeDirection0.y > mingazeDirection0.y && gazeDirection0.y < maxgazeDirection0.y &&
-						gazeDirection0.z > mingazeDirection0.z && gazeDirection0.z < maxgazeDirection0.z &&
-						gazeDirection1.x > mingazeDirection1.x && gazeDirection1.x < maxgazeDirection1.x &&
-						gazeDirection0.y > mingazeDirection1.y && gazeDirection1.y < maxgazeDirection1.y &&
-						gazeDirection0.z > mingazeDirection1.z && gazeDirection1.z < maxgazeDirection1.z) 
-					*{
-						//float mx0 = (gazeDirection0.x - mingazeDirection0.x) / (maxgazeDirection0.x - mingazeDirection0.x);
-						float mx0 = (maxgazeDirection0.x - gazeDirection0.x) / (maxgazeDirection0.x - mingazeDirection0.x);
-						float my0 = (gazeDirection0.y - mingazeDirection0.y) / (maxgazeDirection0.y - mingazeDirection0.y);
-						float mx1 = (maxgazeDirection1.x - gazeDirection1.x) / (maxgazeDirection1.x - mingazeDirection1.x);
-						float my1 = (gazeDirection1.y - mingazeDirection1.y) / (maxgazeDirection1.y - mingazeDirection1.y);
-						// int mx = (mx0 + mx1) * ScreenWidth / 4;
-						// int my = (my0 + my1) * ScreenHeight / 4;
-						int mx = (mx0 + mx1) * ScreenWidth / 2;
-						int my = (my0 + my1) * ScreenHeight / 2;
-						//MousePosition(mx, my);
-						int smoothing = 10;
-						smoothMouseX = (smoothMouseX * smoothing + mx) / (smoothing + 1);
-						smoothMouseY = (smoothMouseY * smoothing + my) / (smoothing + 1);
-						// smoothMouseX = mx;
-						// smoothMouseY = my;
-						MousePosition(smoothMouseX, smoothMouseY);
-					}
-						*/
 					// Sleep(100);
 
 					gazeDirection.x = (gazeDirection0.x + gazeDirection1.x - midgazeDirection0.x - midgazeDirection1.x) / 2.f;
 					gazeDirection.y = (gazeDirection0.y + gazeDirection1.y - midgazeDirection0.y - midgazeDirection1.y) / 2.f;
-					/*
-					gazeDiff = sqrtf(
-						(gazeDirection0.y - gazeDirection1.y - midgazeDirection0.y - midgazeDirection1.y)
-						* (gazeDirection0.y - gazeDirection1.y - midgazeDirection0.y - midgazeDirection1.y) +
-						(gazeDirection0.x + gazeDirection1.x - midgazeDirection0.x - midgazeDirection1.x)
-						* (gazeDirection0.x + gazeDirection1.x - midgazeDirection0.x - midgazeDirection1.x));
-					*/
+					
 					float gazeDiffToll = (maxgazeDiff - mingazeDiff) * 0.0001;
-					/*
-					if (gazeDiff > maxgazeDiff + gazeDiffToll)
-					{
-						event_happening = true;
-						if (loop_count == 10)
-							Beep(750, 100);
-						else
-							Sleep(10);
-					}
-					else if (gazeDiff < mingazeDiff - gazeDiffToll)
-					{
-						event_happening = true;
-						if (loop_count == 10)
-							Beep(850, 100);
-						else
-							Sleep(10);
-					}
-					else */
+
+					// Nudge the midgazeDirection towards the current on-screen gazeDirection
+					// This is to try to counter drift
+					float expSmoothing = 0.8f;
+					
 					if (gazeDirection.x > mingazeDirection.x && gazeDirection.x < maxgazeDirection.x &&
 						gazeDirection.y > mingazeDirection.y && gazeDirection.y < maxgazeDirection.y)
 					{
-						//*
+						//*/
 						if (gazeDiff > maxgazeDiff + gazeDiffToll)
 						{
 							event_happening = true;
@@ -632,90 +520,15 @@ int main (int argc, char **argv)
 							else
 								Sleep(10);
 						}
-						else if (gazeDiff < mingazeDiff - gazeDiffToll)
-						{
-							event_happening = true;
-							if (loop_count == 10)
-							{
-								Beep(850, 100);
 
-								if (magFactor == 1.f)
-								{
-									magFactor = 2.f;
-									smoothing /= magFactor;
-								}
-								else
-								{
-									magFactor = 1.f;
-									smoothing = 1000;
-								}
-								MagScreenX = ScreenX / magFactor;
-								MagScreenY = ScreenY / magFactor;
-
-								POINT p;
-								if (GetCursorPos(&p))
-								{
-									xDlg = (int)((float)p.x - MagScreenX / 2.0);
-									yDlg = (int)((float)p.y - MagScreenY / 2.0);
-
-									if (xDlg > ScreenX - MagScreenX)
-										xDlg = ScreenX - MagScreenX;
-									else if (xDlg < 0)
-										xDlg = 0;
-
-									if (yDlg > ScreenY - MagScreenY)
-										yDlg = ScreenY - MagScreenY;
-									else if (yDlg < 0)
-										yDlg = 0;
-								}
-								else
-								{
-									xDlg = (int)(ScreenX * (1.0 - (1.0 / magFactor)) / 2.0);
-									yDlg = (int)(ScreenY * (1.0 - (1.0 / magFactor)) / 2.0);
-								}
-
-								BOOL fSuccess = MagSetFullscreenTransform(magFactor, xDlg, yDlg);
-								if (fSuccess)
-								{
-									// If an input transform for pen and touch is currently applied, update the transform
-									// to account for the new magnification.
-									BOOL fInputTransformEnabled;
-									RECT rcInputTransformSource;
-									RECT rcInputTransformDest;
-
-									if (MagGetInputTransform(&fInputTransformEnabled, &rcInputTransformSource, &rcInputTransformDest))
-									{
-										if (fInputTransformEnabled)
-										{
-											// SetInputTransform(hwndDlg, fInputTransformEnabled);
-										}
-									}
-								}
-							}
-							else
-								Sleep(10);
-						}
-						//*/
+						// Nudge the midgazeDirection towards the current on-screen gazeDirection
+						// This is to try to counter drift
+						expSmoothing = 0.7f;
+						
 					}
 					else
 					{
-						/*
-						POINT p;
-						if (GetCursorPos(&p))
-						{
-							if (smoothMouseX != p.x) smoothMouseX = p.x;
-							if (smoothMouseY != p.y) smoothMouseY = p.y;
-						}
-
-						int smoothing = 1000;
-						int smoothMouseX_old = smoothMouseX;
-						int smoothMouseY_old = smoothMouseY;
-						/*
-						if (gazeDirection0.x < mingazeDirection0.x) { smoothMouseX += (mingazeDirection0.x - gazeDirection0.x) * smoothing; } // smoothing; }
-						else if (gazeDirection0.x > maxgazeDirection0.x) { smoothMouseX -= (gazeDirection0.x - maxgazeDirection0.x) * smoothing; } // smoothing; }
-						if (gazeDirection0.y < mingazeDirection0.y) { smoothMouseY -= (mingazeDirection0.y - gazeDirection0.y) * smoothing; } // smoothing; }
-						else if (gazeDirection0.y > maxgazeDirection0.y) { smoothMouseY += (gazeDirection0.y - maxgazeDirection0.y) * smoothing; } // smoothing; }
-						*/
+						expSmoothing = 1.f;
 
 						int loop_start = 10;
 						int loop_stop = 30;
@@ -734,7 +547,6 @@ int main (int argc, char **argv)
 								if (smoothMouseY != p.y) smoothMouseY = p.y;
 							}
 
-							// int smoothing = 1000;
 							int smoothMouseX_old = smoothMouseX;
 							int smoothMouseY_old = smoothMouseY;
 
@@ -766,6 +578,11 @@ int main (int argc, char **argv)
 						{
 							Beep(950, 100);
 						}
+						else if (loop_count > 3 * loop_stop)
+						{
+							expSmoothing = 0.9f;
+							Sleep(after_sleep);
+						}
 						else if (loop_count > loop_stop)
 						{
 							Sleep(after_sleep);
@@ -773,142 +590,16 @@ int main (int argc, char **argv)
 						else
 							Sleep(before_sleep);
 
-						/*
-						if (gazeDirection.x < mingazeDirection.x) 
-						{
-							event_happening = true;
-							if (loop_count > loop_start && loop_count < loop_stop)
-							{
-								smoothMouseX += (mingazeDirection.x - gazeDirection.x) * smoothing;
-								Sleep(during_sleep);
-							}
-							else if (loop_count == loop_stop)
-							{
-								Beep(650, 100);
-							}
-							else if (loop_count == 2 * loop_stop)
-							{
-								Beep(950, 100);
-							}
-							else if (loop_count > loop_stop)
-							{
-								Sleep(after_sleep);
-							}
-							else
-								Sleep(before_sleep);
-							/*
-							if (gazeDiff < mingazeDiff - gazeDiffToll)
-							{
-								event_happening = true;
-								if (loop_count == 10)
-								{
-									Beep(850, 100);
-									Beep(950, 100);
-								}
-								else
-									Sleep(10);
-							}
-							*
-						} // smoothing; }
-						else if (gazeDirection.x > maxgazeDirection.x) 
-						{
-							event_happening = true;
-							if (loop_count > loop_start && loop_count < loop_stop)
-							{
-								smoothMouseX -= (gazeDirection.x - maxgazeDirection.x) * smoothing;
-								Sleep(during_sleep);
-							}
-							else if (loop_count == loop_stop)
-							{
-								Beep(650, 100);
-							}
-							else if (loop_count == 2 * loop_stop)
-							{
-								Beep(950, 100);
-							}
-							else if (loop_count > loop_stop)
-							{
-								Sleep(after_sleep);
-							}
-							else
-								Sleep(before_sleep);
-							/*
-							if (gazeDiff < mingazeDiff - gazeDiffToll)
-							{
-								event_happening = true;
-								if (loop_count == 10)
-								{
-									Beep(950, 100);
-									Beep(850, 100);
-								}
-								else
-									Sleep(10);
-							}
-							*
-						} // smoothing; }
-						/*
-						if (gazeDirection.y < mingazeDirection.y) 
-						{
-							event_happening = true;
-							if (loop_count > loop_start && loop_count < loop_stop)
-							{
-								smoothMouseY -= (mingazeDirection.y - gazeDirection.y) * smoothing;
-								Sleep(during_sleep);
-							}
-							else if (loop_count == loop_stop)
-							{
-								Beep(650, 100);
-							}
-							else if (loop_count == 2 * loop_stop)
-							{
-								Beep(950, 100);
-							}
-							else if (loop_count > loop_stop)
-							{
-								Sleep(after_sleep);
-							}
-							else
-								Sleep(before_sleep);
-						} // smoothing; }
-						else if (gazeDirection.y > maxgazeDirection.y) 
-						{
-							event_happening = true;
-							if (loop_count > loop_start && loop_count < loop_stop)
-							{
-								smoothMouseY += (gazeDirection.y - maxgazeDirection.y) * smoothing;
-								Sleep(during_sleep);
-							}
-							else if (loop_count == loop_stop)
-							{
-								Beep(650, 100);
-							}
-							else if (loop_count == 2 * loop_stop)
-							{
-								Beep(950, 100);
-							}
-							else if (loop_count > loop_stop)
-							{
-								Sleep(after_sleep);
-							}
-							else
-								Sleep(before_sleep); 
-						} // smoothing; }
-						*
-						if (smoothMouseX < 0) { smoothMouseX = ScreenWidth; }
-						else if (smoothMouseX > ScreenWidth) { smoothMouseX = 0; }
-						if (smoothMouseY < 0) { smoothMouseY = ScreenHeight; }
-						else if (smoothMouseY > ScreenHeight) { smoothMouseY = 0; }
-						*
-
-						if (smoothMouseX < xDlg) { smoothMouseX = xDlg + MagScreenX; }
-						else if (smoothMouseX > xDlg + MagScreenX) { smoothMouseX = xDlg; }
-						if (smoothMouseY < yDlg) { smoothMouseY = yDlg + MagScreenY; }
-						else if (smoothMouseY > yDlg + MagScreenY) { smoothMouseY = yDlg; }
-
-						if (smoothMouseX != smoothMouseX_old || smoothMouseY != smoothMouseY_old)
-							MousePosition(smoothMouseX, smoothMouseY);
-						//*/
 					}
+
+					// Nudge the midgazeDirection towards the current on-screen gazeDirection
+					// This is to try to counter drift
+					// float expSmoothing = 0.8f;
+					midgazeDirection0.x = midgazeDirection0.x * expSmoothing + (1 - expSmoothing) * gazeDirection0.x;
+					midgazeDirection1.x = midgazeDirection1.x * expSmoothing + (1 - expSmoothing) * gazeDirection1.x;
+					midgazeDirection0.y = midgazeDirection0.y * expSmoothing + (1 - expSmoothing) * gazeDirection0.y;
+					midgazeDirection1.y = midgazeDirection1.y * expSmoothing + (1 - expSmoothing) * gazeDirection1.y;
+
 				}
 				else if (!MouseControl && MouseCalibrate)
 				{
@@ -935,13 +626,7 @@ int main (int argc, char **argv)
 
 					gazeDirection.x = (gazeDirection0.x + gazeDirection1.x - midgazeDirection0.x - midgazeDirection1.x) / 2.f;
 					gazeDirection.y = (gazeDirection0.y + gazeDirection1.y - midgazeDirection0.y - midgazeDirection1.y) / 2.f;
-					/*/
-					gazeDiff = sqrtf(
-						(gazeDirection0.y - gazeDirection1.y - midgazeDirection0.y - midgazeDirection1.y)
-						* (gazeDirection0.y - gazeDirection1.y - midgazeDirection0.y - midgazeDirection1.y) +
-						(gazeDirection0.x + gazeDirection1.x - midgazeDirection0.x - midgazeDirection1.x)
-						* (gazeDirection0.x + gazeDirection1.x - midgazeDirection0.x - midgazeDirection1.x));
-					//*/
+		
 					if (gazeDirection.x < mingazeDirection.x) { mingazeDirection.x = gazeDirection.x; }
 					if (gazeDirection.x > maxgazeDirection.x) { maxgazeDirection.x = gazeDirection.x; }
 					if (gazeDirection.y < mingazeDirection.y) { mingazeDirection.y = gazeDirection.y; }
@@ -973,7 +658,7 @@ int main (int argc, char **argv)
 			
 			// blank_image = captured_image.clone();
 			// blank_image = grayscale_image.clone();
-			visualise_tracking(blank_image, depth_image, clnf_model, det_parameters, gazeDirection0, gazeDirection1, frame_count, fx, fy, cx, cy);
+			visualise_tracking(grayscale_image, depth_image, clnf_model, det_parameters, gazeDirection0, gazeDirection1, frame_count, fx, fy, cx, cy);
 			/*
 			cv::Mat blank_image_mirror = blank_image.clone();
 			for (int i = 0; i < captured_image.rows; i++) 
@@ -1196,7 +881,7 @@ int main (int argc, char **argv)
 				}
 			}
 			// restart the mouse
-			if (character_press == 'm')
+			if (character_press == 'm' || character_press == ' ')
 			{
 				/*
 				MouseX = 1000;
@@ -1272,7 +957,7 @@ int main (int argc, char **argv)
 			}
 			// Sleep(100);
 		}
-		MagUninitialize();
+		// MagUninitialize();
 		frame_count = 0;
 
 		// Reset the model, for the next video
@@ -1284,6 +969,7 @@ int main (int argc, char **argv)
 			done = true;
 		}
 	}
+	MagUninitialize();
 
 	return 0;
 }
