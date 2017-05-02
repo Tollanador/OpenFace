@@ -79,6 +79,7 @@
 // #include "resource.h"
 // #include "strsafe.h"
 #include "Magnification.h"
+#include "MagnifierSample.hpp"
 // magnification.lib;
 
 #define INFO_STREAM( stream ) \
@@ -198,8 +199,27 @@ void MousePosition(int x, int y)
 	::SendInput(1, &Input, sizeof(INPUT));
 }
 
-int main (int argc, char **argv)
+int main (int argc, char **argv, 
+	_In_ HINSTANCE hInstance,
+	_In_opt_ HINSTANCE /*hPrevInstance*/,
+	_In_ LPSTR     /*lpCmdLine*/,
+	_In_ int       nCmdShow)
 {
+	if (FALSE == MagInitialize())
+	{
+		return 0;
+	}
+	if (FALSE == SetupMagnifier(hInstance))
+	{
+		return 0;
+	}
+
+	ShowWindow(hwndHost, nCmdShow);
+	UpdateWindow(hwndHost);
+
+	// Create a timer to update the control.
+	// UINT_PTR timerId = SetTimer(hwndHost, 0, timerInterval, UpdateMagWindow);
+	UINT_PTR timerId = SetTimer(hwndHost, 0, timerInterval, UpdateMagWindowFixed);
 
 	vector<string> arguments = get_arguments(argc, argv);
 
@@ -283,7 +303,9 @@ int main (int argc, char **argv)
 	int ScreenWidth = ::GetSystemMetrics(SM_CXSCREEN);
 	int ScreenHeight = ::GetSystemMetrics(SM_CYSCREEN);
 
-	MagInitialize();
+	// UINT_PTR timerId = SetTimer(hwndHost, 0, timerInterval, UpdateMagWindowFixed(xDlg, yDlg, MagScreenX, MagScreenY));
+
+	// MagInitialize();
 
 	while(!done) // this is not a for loop as we might also be reading from a webcam
 	{
@@ -499,8 +521,24 @@ int main (int argc, char **argv)
 									yDlg = (int)(ScreenY * (1.0 - (1.0 / magFactor)) / 2.0);
 								}
 
-								BOOL fSuccess = MagSetFullscreenTransform(magFactor, xDlg, yDlg);
-								if (fSuccess)
+								isMagnified = !isMagnified;
+								ChangeMagnification();
+
+								RECT sourceRect;
+								sourceRect.left = xDlg;
+								sourceRect.right = xDlg + MagScreenX;
+
+								// Set the source rectangle for the magnifier control.
+								MagSetWindowSource(hwndMag, sourceRect);
+
+								// Reclaim topmost status, to prevent unmagnified menus from remaining in view. 
+								SetWindowPos(hwndHost, HWND_TOPMOST, 0, 0, 0, 0,
+									SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+
+								// Force redraw.
+								InvalidateRect(hwndMag, NULL, TRUE);
+								// BOOL fSuccess = MagSetFullscreenTransform(magFactor, xDlg, yDlg);
+								if (false) // (fSuccess)
 								{
 									// If an input transform for pen and touch is currently applied, update the transform
 									// to account for the new magnification.
@@ -658,7 +696,7 @@ int main (int argc, char **argv)
 			
 			// blank_image = captured_image.clone();
 			// blank_image = grayscale_image.clone();
-			visualise_tracking(grayscale_image, depth_image, clnf_model, det_parameters, gazeDirection0, gazeDirection1, frame_count, fx, fy, cx, cy);
+			visualise_tracking(captured_image, depth_image, clnf_model, det_parameters, gazeDirection0, gazeDirection1, frame_count, fx, fy, cx, cy);
 			/*
 			cv::Mat blank_image_mirror = blank_image.clone();
 			for (int i = 0; i < captured_image.rows; i++) 
@@ -720,6 +758,9 @@ int main (int argc, char **argv)
 			}
 			if (character_press == '1')
 			{
+				isMagnified = false;
+				ChangeMagnification();
+				// UpdateMagWindow;
 				//Beep(850, 100);
 
 				if (magFactor != 1.f)
@@ -752,8 +793,8 @@ int main (int argc, char **argv)
 						yDlg = (int)(ScreenY * (1.0 - (1.0 / magFactor)) / 2.0);
 					}
 
-					BOOL fSuccess = MagSetFullscreenTransform(magFactor, xDlg, yDlg);
-					if (fSuccess)
+					// BOOL fSuccess = MagSetFullscreenTransform(magFactor, xDlg, yDlg);
+					if (false) // (fSuccess)
 					{
 						Beep(850, 100);
 						// If an input transform for pen and touch is currently applied, update the transform
@@ -774,6 +815,9 @@ int main (int argc, char **argv)
 			}
 			if (character_press == '2')
 			{
+				isMagnified = true;
+				ChangeMagnification();
+				// UpdateMagWindow;
 				//Beep(850, 100);
 
 				if (magFactor != 2.f)
@@ -806,8 +850,8 @@ int main (int argc, char **argv)
 						yDlg = (int)(ScreenY * (1.0 - (1.0 / magFactor)) / 2.0);
 					}
 
-					BOOL fSuccess = MagSetFullscreenTransform(magFactor, xDlg, yDlg);
-					if (fSuccess)
+					// BOOL fSuccess = MagSetFullscreenTransform(magFactor, xDlg, yDlg);
+					if (false) // (fSuccess)
 					{
 						Beep(850, 100);
 						// If an input transform for pen and touch is currently applied, update the transform
@@ -828,6 +872,9 @@ int main (int argc, char **argv)
 			}
 			if (character_press == '3')
 			{
+				isMagnified = true;
+				ChangeMagnification();
+				// UpdateMagWindow;
 				// Beep(850, 100);
 
 				if (magFactor != 3.f)
@@ -860,8 +907,8 @@ int main (int argc, char **argv)
 						yDlg = (int)(ScreenY * (1.0 - (1.0 / magFactor)) / 2.0);
 					}
 
-					BOOL fSuccess = MagSetFullscreenTransform(magFactor, xDlg, yDlg);
-					if (fSuccess)
+					// BOOL fSuccess = MagSetFullscreenTransform(magFactor, xDlg, yDlg);
+					if (false) // (fSuccess)
 					{
 						Beep(850, 100);
 						// If an input transform for pen and touch is currently applied, update the transform
@@ -956,6 +1003,7 @@ int main (int argc, char **argv)
 				Sleep(100);
 			}
 			// Sleep(100);
+			// UpdateMagWindowFixed(xDlg, yDlg, MagScreenX, MagScreenY);
 		}
 		// MagUninitialize();
 		frame_count = 0;
@@ -969,6 +1017,8 @@ int main (int argc, char **argv)
 			done = true;
 		}
 	}
+
+	KillTimer(NULL, timerId);
 	MagUninitialize();
 
 	return 0;
