@@ -152,6 +152,83 @@ void visualise_tracking(cv::Mat& captured_image, cv::Mat_<float>& depth_image, c
 	}
 }
 
+float eye_aspect_ratio(const LandmarkDetector::CLNF& face_model, bool left_eye)
+{
+	if (face_model.eye_model)
+	{
+		int x1 = 45;
+		int x2 = 42;
+		int x3 = 43;
+		int x4 = 47;
+		int x5 = 44;
+		int x6 = 46;
+
+		if (!left_eye)
+		{
+			x1 = 39;
+			x2 = 36;
+			x3 = 37;
+			x4 = 41;
+			x5 = 38;
+			x6 = 40;
+		}
+
+		float major = sqrtf(
+			(face_model.detected_landmarks(x1) - face_model.detected_landmarks(x2))
+			* (face_model.detected_landmarks(x1) - face_model.detected_landmarks(x2))
+			+ (face_model.detected_landmarks(x1 + 68) - face_model.detected_landmarks(x2 + 68))
+			* (face_model.detected_landmarks(x1 + 68) - face_model.detected_landmarks(x2 + 68))
+		);
+		float minor = (
+			sqrtf(
+			(face_model.detected_landmarks(x3) - face_model.detected_landmarks(x4))
+				* (face_model.detected_landmarks(x3) - face_model.detected_landmarks(x4))
+				+ (face_model.detected_landmarks(x3 + 68) - face_model.detected_landmarks(x4 + 68))
+				* (face_model.detected_landmarks(x3 + 68) - face_model.detected_landmarks(x4 + 68))
+			)
+			+ sqrtf(
+			(face_model.detected_landmarks(x5) - face_model.detected_landmarks(x6))
+				* (face_model.detected_landmarks(x5) - face_model.detected_landmarks(x6))
+				+ (face_model.detected_landmarks(x5 + 68) - face_model.detected_landmarks(x6 + 68))
+				* (face_model.detected_landmarks(x5 + 68) - face_model.detected_landmarks(x6 + 68))
+			)
+			) / 2.f;
+
+		float ear = major / minor;
+		return ear;
+	}
+	return 0.f;
+}
+
+void GenerateKey(int vk, BOOL bExtended)
+{
+	KEYBDINPUT  kb = { 0 };
+	INPUT    Input = { 0 };
+	// generate down 
+	if (bExtended)
+		kb.dwFlags = KEYEVENTF_EXTENDEDKEY;
+	kb.wVk = vk;
+	Input.type = INPUT_KEYBOARD;
+
+	Input.ki = kb;
+	::SendInput(1, &Input, sizeof(Input));
+
+	Sleep(50);
+	//Beep(950, 100);
+
+	// generate up 
+	::ZeroMemory(&kb, sizeof(KEYBDINPUT));
+	::ZeroMemory(&Input, sizeof(INPUT));
+	kb.dwFlags = KEYEVENTF_KEYUP;
+	if (bExtended)
+		kb.dwFlags |= KEYEVENTF_EXTENDEDKEY;
+
+	kb.wVk = vk;
+	Input.type = INPUT_KEYBOARD;
+	Input.ki = kb;
+	::SendInput(1, &Input, sizeof(Input));
+}
+
 int main (int argc, char **argv)
 {
 
@@ -197,6 +274,9 @@ int main (int argc, char **argv)
 	int f_n = -1;
 	
 	det_parameters.track_gaze = true;
+
+	int loop_count = 0;
+	bool event_happening = false;
 
 	while(!done) // this is not a for loop as we might also be reading from a webcam
 	{
@@ -342,7 +422,7 @@ int main (int argc, char **argv)
 				FaceAnalysis::EstimateGaze(clnf_model, gazeDirection0, fx, fy, cx, cy, true);
 				FaceAnalysis::EstimateGaze(clnf_model, gazeDirection1, fx, fy, cx, cy, false);
 			}
-
+			
 			visualise_tracking(captured_image, depth_image, clnf_model, det_parameters, gazeDirection0, gazeDirection1, frame_count, fx, fy, cx, cy);
 			
 			// output the tracked video
@@ -353,9 +433,58 @@ int main (int argc, char **argv)
 
 
 			video_capture >> captured_image;
+
+			// detect blinks
+			float lear = eye_aspect_ratio(clnf_model, true);
+			float rear = eye_aspect_ratio(clnf_model, false);
+			float blink_tol = 4.f;
+			if (lear > blink_tol && rear > blink_tol)
+			{
+				event_happening = true;
+				//if (loop_count > 5)
+					//Sleep(100);
+
+			}
+			else if (loop_count > 0 && loop_count < 20)
+			{
+				//GenerateKey('A', FALSE);
+				//GenerateKey(VK_F11, FALSE);
+				//GenerateKey(VK_F12, FALSE);
+				//Beep(950, 100);
+				GenerateKey(VK_F22, FALSE);
+				//Beep(950, 70);
+			}
 		
 			// detect key presses
 			char character_press = cv::waitKey(1);
+
+			// left eye
+			if (character_press == 's')
+			{
+				// if (clnf_model.eye_model)
+				{
+					float ear = eye_aspect_ratio(clnf_model, true);
+					INFO_STREAM("Left eye EAR: " << ear
+						// 	<< ", major: " << major
+						// 	<< ", minor: " << minor
+					);
+					//INFO_STREAM("Right eye EAR: " << clnf_model.detected_landmarks(1, x1));
+					//INFO_STREAM("Right eye EAR: " << clnf_model.detected_landmarks(2, x1));
+				}
+			}
+
+			// left eye
+			if (character_press == 'd')
+			{
+				// if (clnf_model.eye_model)
+				{
+					float ear = eye_aspect_ratio(clnf_model, false);
+					INFO_STREAM("Right eye EAR: " << ear
+						// 	<< ", major: " << major
+						// 	<< ", minor: " << minor
+					);
+				}
+			}
 			
 			// restart the tracker
 			if(character_press == 'r')
@@ -370,6 +499,18 @@ int main (int argc, char **argv)
 
 			// Update the frame count
 			frame_count++;
+
+			if (event_happening)
+			{
+				loop_count++;
+				event_happening = false;
+			}
+			else
+			{
+				if (loop_count > 0)
+					loop_count = 0;
+				//Sleep(50);
+			}
 
 		}
 		
